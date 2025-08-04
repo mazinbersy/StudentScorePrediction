@@ -1,30 +1,93 @@
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+def load_data(filepath):
+    data = pd.read_csv(filepath)
+    return data.dropna(axis=0)
 
+def split_data(data, features, target, test_size=0.2, random_state=1):
+    x = data[features]
+    y = data[target]
+    return train_test_split(x, y, test_size=test_size, random_state=random_state)
 
+def train_linear_model(x_train, y_train):
+    model = LinearRegression()
+    model.fit(x_train, y_train)
+    return model
 
-student_data = pd.read_csv("StudentPerformanceFactors.csv")
-student_data = student_data.dropna(axis=0)
+def evaluate_model(y_true, y_pred):
+    mae = mean_absolute_error(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_true, y_pred)
+    return mae, mse, rmse, r2
 
-features = ["Hours_Studied"]
-x = student_data[features]
-y = student_data.Exam_Score
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=1)
+def plot_linear_results(x_test, y_test, y_pred):
+    plt.scatter(x_test, y_test, color='blue', label='Actual')
+    plt.plot(x_test, y_pred, color='red', linewidth=2, label='Predicted')
+    plt.xlabel("Hours Studied")
+    plt.ylabel("Exam Score")
+    plt.title("Linear Regression: Actual vs Predicted")
+    plt.legend()
+    plt.show()
 
-model = LinearRegression()
-model.fit(x_train, y_train)
-y_pred = model.predict(x_test)
+def train_polynomial_model(x_train, y_train, degree):
+    poly = PolynomialFeatures(degree=degree)
+    x_poly_train = poly.fit_transform(pd.DataFrame(x_train, columns=["Hours_Studied"]))
+    model = LinearRegression()
+    model.fit(x_poly_train, y_train)
+    return poly, model
 
-plt.scatter(x_test, y_test, color='blue', label='Actual')
-plt.plot(x_test, y_pred, color='red', linewidth=2, label='Predicted')
-plt.xlabel("Hours Studied")
-plt.ylabel("Exam Score")
-plt.title("Actual vs Predicted Exam Scores")
-plt.legend()
-plt.show()
+def plot_polynomial_results(x, y, poly, model, degree):
+    x_range = np.linspace(x.min(), x.max(), 100).reshape(-1, 1)
+    x_range_poly = poly.transform(pd.DataFrame(x_range, columns=["Hours_Studied"]))
+    y_range_pred = model.predict(x_range_poly)
 
+    plt.scatter(x, y, color='blue', label='Actual Data')
+    plt.plot(x_range, y_range_pred, color='red', label=f'Polynomial Degree {degree}: Actual vs Predicted')
+    plt.xlabel("Hours Studied")
+    plt.ylabel("Exam Score")
+    plt.title("Polynomial Regression Fit")
+    plt.legend()
+    plt.show()
 
+def print_metrics(title, metrics):
+    mae, mse, rmse, r2 = metrics
+    print(f"{title}:")
+    print(f"Mean Absolute Error (MAE): {mae:.3f}")
+    print(f"Mean Squared Error (MSE): {mse:.3f}")
+    print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
+    print(f"R² Score: {r2:.3f}")
+    print()
 
+def main():
+    filepath = "StudentPerformanceFactors.csv"
+    data = load_data(filepath)
+
+    features = ["Hours_Studied"]
+    target = "Exam_Score"
+    x_train, x_test, y_train, y_test = split_data(data, features, target)
+
+    # Linear Regression
+    linear_model = train_linear_model(x_train, y_train)
+    y_pred_linear = linear_model.predict(x_test)
+    linear_metrics = evaluate_model(y_test, y_pred_linear)
+    plot_linear_results(x_test, y_test, y_pred_linear)
+    print_metrics("Linear Regression Metrics", linear_metrics)
+
+    # Polynomial Regression
+    degree = 3
+    poly_transformer, poly_model = train_polynomial_model(x_train, y_train, degree)
+    x_poly_test = poly_transformer.transform(pd.DataFrame(x_test, columns=["Hours_Studied"]))
+    y_pred_poly = poly_model.predict(x_poly_test)
+    poly_metrics = evaluate_model(y_test, y_pred_poly)
+    plot_polynomial_results(x_test, y_test, poly_transformer, poly_model, degree)
+    print_metrics(f"Polynomial Regression Metrics (Degree {degree})", poly_metrics)
+
+if __name__ == "__main__":
+    main()
