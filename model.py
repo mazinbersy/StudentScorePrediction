@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from tabulate import tabulate
 
 def load_data(filepath):
     data = pd.read_csv(filepath)
@@ -56,14 +57,16 @@ def plot_polynomial_results(x, y, poly, model, degree):
     plt.legend()
     plt.show()
 
-def print_metrics(title, metrics):
-    mae, mse, rmse, r2 = metrics
-    print(f"{title}:")
-    print(f"Mean Absolute Error (MAE): {mae:.3f}")
-    print(f"Mean Squared Error (MSE): {mse:.3f}")
-    print(f"Root Mean Squared Error (RMSE): {rmse:.3f}")
-    print(f"R² Score: {r2:.3f}")
-    print()
+def print_metrics(linear, poly):
+    linear_mae, linear_mse, linear_rmse, linear_r2 = linear
+    poly_mae, poly_mse, poly_rmse, poly_r2 = poly
+
+    table = [["Mean Absolute Error (MAE)", f"{linear_mae:.3f}", f"{poly_mae:.3f}"],
+             ["Mean Squared Error (MSE)", f"{linear_mse:.3f}", f"{poly_mse:.3f}"],
+             ["Root Mean Squared Error (RMSE)", f"{linear_rmse:.3f}", f"{poly_rmse:.3f}"],
+             ["R² Score", f"{linear_rmse:.3f}", f"{poly_r2:.3f}"]]
+
+    print(tabulate(table, headers=["Metric", "Linear Regression", "Polynomial Regression"], tablefmt = "grid"))
 
 def main():
     filepath = "StudentPerformanceFactors.csv"
@@ -78,7 +81,6 @@ def main():
     y_pred_linear = linear_model.predict(x_test)
     linear_metrics = evaluate_model(y_test, y_pred_linear)
     plot_linear_results(x_test, y_test, y_pred_linear)
-    print_metrics("Linear Regression Metrics", linear_metrics)
 
     # Polynomial Regression
     degree = 3
@@ -87,7 +89,8 @@ def main():
     y_pred_poly = poly_model.predict(x_poly_test)
     poly_metrics = evaluate_model(y_test, y_pred_poly)
     plot_polynomial_results(x_test, y_test, poly_transformer, poly_model, degree)
-    print_metrics(f"Polynomial Regression Metrics (Degree {degree})", poly_metrics)
+
+    print_metrics(linear_metrics, poly_metrics)
 
 if __name__ == "__main__":
     main()
