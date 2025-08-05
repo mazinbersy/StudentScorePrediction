@@ -64,7 +64,7 @@ def print_metrics(linear, poly):
     table = [["Mean Absolute Error (MAE)", f"{linear_mae:.3f}", f"{poly_mae:.3f}"],
              ["Mean Squared Error (MSE)", f"{linear_mse:.3f}", f"{poly_mse:.3f}"],
              ["Root Mean Squared Error (RMSE)", f"{linear_rmse:.3f}", f"{poly_rmse:.3f}"],
-             ["R² Score", f"{linear_rmse:.3f}", f"{poly_r2:.3f}"]]
+             ["R² Score", f"{linear_r2:.3f}", f"{poly_r2:.3f}"]]
 
     print(tabulate(table, headers=["Metric", "Linear Regression", "Polynomial Regression"], tablefmt = "grid"))
 
